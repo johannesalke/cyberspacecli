@@ -25,6 +25,7 @@ type Config struct {
 func main() {
 
 	csc := client.InitAPIClient()
+	fmt.Print(csc)
 
 	//cfg := Config{apiUrl: "https://api.cyberspace.online/v1"}
 	//client := http.NewClientHandler()

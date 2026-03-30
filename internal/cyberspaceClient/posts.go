@@ -135,7 +135,7 @@ func WritePost() string {
 
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
-		editor = "vi" // fallback
+		editor = "nano" // fallback
 	}
 
 	cmd := exec.Command(editor, tmpFile.Name())

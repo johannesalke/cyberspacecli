@@ -46,7 +46,7 @@ func (c *APIClient) GetReplies(postID string, limit int, cursor string) (replies
 
 	req, err := makeRequest("GET", url, c.Tokens, nil)
 	if err != nil {
-		return []Post{}, cursor, fmt.Errorf("Error forming request: %s", err)
+		return nil, cursor, fmt.Errorf("Error forming request: %s", err)
 	}
 
 	res, err := c.sendRequest(req)
