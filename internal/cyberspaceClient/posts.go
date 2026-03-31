@@ -6,8 +6,6 @@ import (
 	"fmt"
 	//client "github.com/johannesalke/CyberspaceTUI/internal/cyberspaceClient"
 	//"net/http"
-	"os"
-	"os/exec"
 	"time"
 )
 
@@ -68,7 +66,7 @@ func (c *APIClient) GetPosts(limit int, cursor string) (posts []Post, newCursor 
 		panic(err)
 	}
 	//fmt.Print(getNotificationsReply)
-	c.Cursors["posts_standard"] = getPostsResponse.Cursor
+	c.Cursors["feed"] = getPostsResponse.Cursor
 	return getPostsResponse.Data, getPostsResponse.Cursor, nil
 
 }
@@ -94,20 +92,21 @@ func (c *APIClient) GetPostById(post_id string) (Post, error) {
 	return postConfirm.Data, nil
 }
 
-func (c *APIClient) CreatePost(tokens AuthTokens) error {
+func (c *APIClient) CreatePost() error {
 
-	content := WritePost()
+	content := WriteContent()
+	topics := WriteTopics()
 	postInput := CreatePostInput{
 		Content:  content,
-		Topics:   []string{"test", "api", "cli"},
-		IsPublic: true,
+		Topics:   topics,
+		IsPublic: false,
 		IsNSFW:   false,
 	}
 	postJson, err := json.Marshal(postInput)
 	if err != nil {
 		panic(err)
 	}
-	req, err := makeRequest("POST", c.ApiUrl+"/posts", tokens, bytes.NewBuffer(postJson))
+	req, err := makeRequest("POST", c.ApiUrl+"/posts", c.Tokens, bytes.NewBuffer(postJson))
 	if err != nil {
 		return fmt.Errorf("Error making post request:%s", err)
 	}
@@ -122,39 +121,8 @@ func (c *APIClient) CreatePost(tokens AuthTokens) error {
 	if err != nil {
 		return fmt.Errorf("Error decoding post json:%s", err)
 	}
-	fmt.Print(postConfirm)
+	//fmt.Print(postConfirm)
 	return nil
-}
-
-func WritePost() string {
-	tmpFile, err := os.CreateTemp("", "message-*.txt")
-	if err != nil {
-		panic(err)
-	}
-	defer os.Remove(tmpFile.Name())
-
-	editor := os.Getenv("EDITOR")
-	if editor == "" {
-		editor = "nano" // fallback
-	}
-
-	cmd := exec.Command(editor, tmpFile.Name())
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
-		panic(err)
-	}
-
-	content, err := os.ReadFile(tmpFile.Name())
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("\nMessage:")
-	fmt.Println(string(content))
-	return string(content)
 }
 
 func (c *APIClient) DeletePost(postId string) error {

@@ -27,3 +27,7 @@ func InitAPIClient() APIClient {
 		Cursors:           make(map[string]string),
 	}
 }
+
+//Missing: Follows,
+
+//Incomplete: Users(Profile update)

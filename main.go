@@ -11,6 +11,8 @@ import (
 	"strings"
 	//"time"
 
+	glamour "charm.land/glamour/v2"
+
 	client "github.com/johannesalke/CyberspaceClient/internal/cyberspaceClient"
 )
 
@@ -22,60 +24,177 @@ type Config struct {
 	client   http.Client
 }
 
-func main() {
+var renderer, err = glamour.NewTermRenderer(
+	glamour.WithStylePath("style.json"),
+	glamour.WithWordWrap(80))
 
-	csc := client.InitAPIClient()
-	fmt.Print(csc)
+//
+
+func main() {
+	fmt.Print(err)
+
+	renderer, _ := glamour.NewTermRenderer(glamour.WithStylePath("dark"))
+	out, _ := renderer.Render("# Heading\n\n**Bold text**\n\n- List item")
+	fmt.Print(out)
+
+	var csc = client.InitAPIClient()
+	//fmt.Print(csc)
 
 	//cfg := Config{apiUrl: "https://api.cyberspace.online/v1"}
 	//client := http.NewClientHandler()
 	csc.Tokens = client.Login(csc.ApiUrl)
-	fmt.Printf("authToken: %.10s", csc.Tokens.IDToken)
-	posts, _, err := csc.GetPosts(5, "")
-	if err != nil {
-		fmt.Print("Error: ", err)
-	}
-	for _, post := range posts {
-		if post.IsNSFW == true {
-			continue
-		}
-		fmt.Print(post.AuthorUsername, " | ", post.PostID, "\n")
-		fmt.Print("=======================================================", "\n")
-		fmt.Print(post.Content, "\n")
-		fmt.Print("=======================================================", "\n")
-	}
+	fmt.Printf("authToken: %.10s\n", csc.Tokens.IDToken)
+
+	/*id := "nxSSfugK6L9tFBSF1zEZ"
+
+	fmt.Print(id)
+	os.Exit(0)*/
+
 	//client.Post{}
-	id := "Leg8tjQYjTZo9cOySqb4"
-	post, err := csc.GetPostById(id)
-	if err != nil {
-		fmt.Print(err)
-	}
-	fmt.Print(post.AuthorUsername, post.Content)
-	err = csc.DeletePost(id)
-	if err != nil {
-		fmt.Print(err)
-	}
-	for true {
-		x := 5
-		x = x + 5
-	}
+	c := commands{make(map[string]func(*client.APIClient, command) error)}
+	c.register("feed", handlerViewFeed)
+	c.register("post", handlerCreatePost)
+
+	c.register("note", handlerUpdateNote)
+	/*
+		post, err := csc.GetPostById(id)
+		if err != nil {
+			fmt.Print(err)
+		}
+		fmt.Print(post.AuthorUsername, post.Content)
+		err = csc.DeletePost(id)
+		if err != nil {
+			fmt.Print(err)
+		}
+		for true {
+			x := 5
+			x = x + 5
+		}
+
+		err = csc.CreatePost()
+		if err != nil {
+			fmt.Print(err)
+		}
+	*/
 	scanner := bufio.NewScanner(os.Stdin)
-	err = csc.CreatePost(csc.Tokens)
-	if err != nil {
-		fmt.Print(err)
-	}
+
 	for true {
 		scanner.Scan()
 		input := scanner.Text()
-		args := strings.Split(input, " ")
-		if len(args) == 0 {
+		arguments := strings.Split(input, " ")
+		if len(arguments) == 0 {
 			continue
+		}
+		cmd := command{Name: arguments[0], Args: arguments[1:]}
+		err := c.run(&csc, cmd)
+		if csc.LastStatusCode == 401 {
+			csc.TokenRefresh()
+			err = c.run(&csc, cmd)
+		}
+		if err != nil {
+			fmt.Println(&err)
 		}
 
 		//cmd := args[0]
 
 	}
 
+}
+
+//==========================================================================================
+
+type command struct {
+	Name string
+	Args []string
+}
+
+type commands struct {
+	commands map[string]func(*client.APIClient, command) error
+}
+
+func (c *commands) run(s *client.APIClient, cmd command) error {
+	if cmdFunc, ok := c.commands[cmd.Name]; ok {
+		return cmdFunc(s, cmd)
+	}
+	return fmt.Errorf("Error: Command used not registered. ")
+}
+func (c *commands) register(name string, f func(*client.APIClient, command) error) {
+	c.commands[name] = f
+}
+
+///=======================================
+
+func handlerViewFeed(csc *client.APIClient, cmd command) error {
+
+	posts, _, err := csc.GetPosts(5, csc.Cursors["feed"])
+	if err != nil {
+		return err
+	}
+	for _, post := range posts {
+		if post.IsNSFW == true {
+			continue
+		}
+		topline, _ := renderer.Render(fmt.Sprintln("@"+post.AuthorUsername, " | ", post.RepliesCount, " replies | ", post.PostID))
+		//fmt.Println(topline)
+
+		seperator, err := renderer.Render(strings.Repeat("─", 80))
+		if err != nil {
+			fmt.Println(err)
+		}
+		renderedMD, err := renderer.Render(post.Content)
+		if err != nil {
+			fmt.Println(err)
+		}
+		err = RenderPost(topline, seperator, renderedMD)
+		if err != nil {
+			fmt.Println(err)
+		}
+		//feedStyle.Render(topline + strings.Repeat("─", 80) + renderedMD)
+		//fmt.Print("=======================================================", "\n")
+
+	}
+	return nil
+}
+func handlerCreatePost(csc *client.APIClient, cmd command) error {
+	err := csc.CreatePost()
+	if err != nil {
+		fmt.Print(err)
+	}
+	return nil
+}
+
+func handlerViewNotifications(csc *client.APIClient, cmd command) error {
+
+	return nil
+}
+
+func handlerViewPost(csc *client.APIClient, cmd command) error {
+
+	return nil
+}
+
+func handlerUpdateNote(csc *client.APIClient, cmd command) error {
+	if len(cmd.Args) != 1 {
+		return fmt.Errorf("This command requiers one argument: The idea of the note to be updated.")
+	}
+
+	Note, err := csc.GetNoteById(cmd.Args[0])
+	if err != nil {
+		return fmt.Errorf("Error: %s ", err)
+
+	}
+	newNote, err := client.EditNote(Note)
+	if err != nil {
+		return fmt.Errorf("Error: %s ", err)
+
+	}
+	id, err := csc.UpdateNote(newNote, cmd.Args[0])
+	if err != nil {
+		return fmt.Errorf("Error: %s ", err)
+
+	}
+	fmt.Print(id, "\n")
+	return nil
 }
 
 ////////////////////////////| Posts |///////////////////////////

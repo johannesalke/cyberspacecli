@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"os/exec"
+	"strings"
 )
 
 func makeRequest(method, url string, tokens AuthTokens, body io.Reader) (*http.Request, error) {
@@ -37,4 +40,76 @@ func (c *APIClient) sendRequest(req *http.Request) (*http.Response, error) {
 		return res, err
 	}
 	return res, nil
+}
+
+func WriteContent() string {
+	tmpFile, err := os.CreateTemp("", "message-*.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "nano" // fallback
+	}
+
+	cmd := exec.Command(editor, tmpFile.Name())
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
+	content, err := os.ReadFile(tmpFile.Name())
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("\nMessage:")
+	fmt.Println(string(content))
+	return string(content)
+}
+
+func WriteTopics() []string {
+	fmt.Print("Content registered. You may now add up to three topics to the entry, seperated by commas:\n")
+	var topicString string
+	fmt.Scanln(&topicString)
+	topics := strings.Split(topicString, ",")
+	return topics
+}
+
+func EditNote(note Note) (CreateNoteInput, error) {
+	tmpFile, err := os.CreateTemp("", "message-*.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer os.Remove(tmpFile.Name())
+	tmpFile.WriteString(note.Content)
+
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "vm" // fallback
+	}
+
+	cmd := exec.Command(editor, tmpFile.Name())
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
+	content, err := os.ReadFile(tmpFile.Name())
+	if err != nil {
+		panic(err)
+	}
+
+	topics := note.Topics
+	newNote := CreateNoteInput{Content: string(content), Topics: topics}
+
+	return newNote, nil
 }

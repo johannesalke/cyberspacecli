@@ -70,14 +70,14 @@ type refreshedTokens struct {
 	RTDBToken string `json:"rtbdToken"`
 }
 
-func (c *APIClient) TokenRefresh(url string) {
+func (c *APIClient) TokenRefresh() {
 
 	refreshJson, err := json.Marshal(refreshData{RefreshToken: c.Tokens.RefreshToken})
 	if err != nil {
 		fmt.Printf("Error encoding refreshData to json: %s", err)
 		os.Exit(1)
 	}
-	res, err := http.Post(url+"/auth/refresh", "application/json", bytes.NewBuffer(refreshJson))
+	res, err := http.Post(c.ApiUrl+"/auth/refresh", "application/json", bytes.NewBuffer(refreshJson))
 	//defer res.Body.Close()
 	if err != nil {
 		fmt.Printf("Error refreshing auth tokens: %s\n", err)

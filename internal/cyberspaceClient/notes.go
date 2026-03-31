@@ -1,0 +1,169 @@
+package client
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"time"
+)
+
+type GetNotesResponse struct {
+	Data   []Note `json:"data"`
+	Cursor string `json:"cursor"`
+}
+
+type OneNoteResponse struct {
+	Data Note `json:"data"`
+}
+
+type Note struct {
+	NoteID         string    `json:"noteId"`
+	RevisionNumber int       `json:"revisionNumber"`
+	AuthorID       string    `json:"authorId"`
+	Content        string    `json:"content"`
+	Deleted        bool      `json:"deleted"`
+	Topics         []string  `json:"topics,omitempty"`
+	CreatedAt      time.Time `json:"createdAt"`
+}
+
+type CreateNoteInput struct {
+	Content string   `json:"content"`
+	Topics  []string `json:"topics,omitempty"`
+}
+
+func (c *APIClient) GetNotes(limit int, cursor string) (posts []Note, newCursor string, err error) {
+	url := makeGetUrl(c.ApiUrl+"/notes", limit, cursor)
+
+	req, err := makeRequest("GET", url, c.Tokens, nil)
+	if err != nil {
+		return []Note{}, cursor, fmt.Errorf("Error forming request: %s", err)
+	}
+
+	res, err := c.sendRequest(req)
+	if err != nil {
+		return nil, cursor, fmt.Errorf("Error retrieving Notes: %s", err)
+	}
+
+	var getNotesResponse GetNotesResponse
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&getNotesResponse)
+	if err != nil {
+		panic(err)
+	}
+	//fmt.Print(getNotificationsReply)
+	c.Cursors["posts_standard"] = getNotesResponse.Cursor
+	return getNotesResponse.Data, getNotesResponse.Cursor, nil
+
+}
+
+func (c *APIClient) GetNoteById(note_id string) (Note, error) {
+
+	req, err := makeRequest("GET", "https://api.cyberspace.online/v1/notes/"+note_id, c.Tokens, nil)
+	if err != nil {
+		return Note{}, fmt.Errorf("Error forming request: %s", err)
+	}
+
+	res, err := c.sendRequest(req)
+	if err != nil {
+		return Note{}, fmt.Errorf("Error requesting post by ID: %s", err)
+	}
+	var oneNote OneNoteResponse
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&oneNote)
+	if err != nil {
+		panic(err)
+	}
+	//fmt.Print(oneNote)
+	return oneNote.Data, nil
+}
+
+func (c *APIClient) CreateNote(noteInput CreateNoteInput) (string, error) {
+
+	/*
+		content := WriteContent()
+		topics := WriteTopics()
+		noteInput = CreateNoteInput{
+			Content: content,
+			Topics:  topics,
+		}*/
+
+	postJson, err := json.Marshal(noteInput)
+	if err != nil {
+		panic(err)
+	}
+	req, err := makeRequest("POST", c.ApiUrl+"/notes", c.Tokens, bytes.NewBuffer(postJson))
+	if err != nil {
+		return "", fmt.Errorf("Error making post request:%s", err)
+	}
+	res, err := c.sendRequest(req)
+	if err != nil {
+		return "", fmt.Errorf("Error sending post request:%s", err)
+	}
+
+	var noteConfirm struct {
+		Data struct {
+			NoteID string `json:"noteId"`
+		} `json:"data"`
+	}
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&noteConfirm)
+	if err != nil {
+		return "", fmt.Errorf("Error decoding post json:%s", err)
+	}
+	//fmt.Print(postConfirm)
+	return noteConfirm.Data.NoteID, nil
+}
+
+func (c *APIClient) UpdateNote(noteInput CreateNoteInput, noteID string) (string, error) {
+
+	/*
+		content := WriteContent()
+		topics := WriteTopics()
+		noteInput = CreateNoteInput{
+			Content: content,
+			Topics:  topics,
+		}*/
+
+	postJson, err := json.Marshal(noteInput)
+	if err != nil {
+		panic(err)
+	}
+	req, err := makeRequest("PATCH", c.ApiUrl+"/notes/"+noteID, c.Tokens, bytes.NewBuffer(postJson))
+	if err != nil {
+		return "", fmt.Errorf("Error making post request:%s", err)
+	}
+	res, err := c.sendRequest(req)
+	if err != nil {
+		return "", fmt.Errorf("Error sending post request:%s", err)
+	}
+
+	var noteConfirm struct {
+		Data struct {
+			NoteID string `json:"noteId"`
+		} `json:"data"`
+	}
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&noteConfirm)
+	if err != nil {
+		return "", fmt.Errorf("Error decoding post json:%s", err)
+	}
+	//fmt.Print(postConfirm)
+	return noteConfirm.Data.NoteID, nil
+}
+
+func (c *APIClient) DeleteNote(postId string) error {
+
+	req, err := makeRequest("DELETE", c.ApiUrl+"/notes/"+postId, c.Tokens, nil)
+	if err != nil {
+		return fmt.Errorf("Error forming delete request: %s", err)
+	}
+	res, err := c.sendRequest(req)
+	if err != nil {
+		return fmt.Errorf("Error during the request process: %s", err)
+	}
+	if res.StatusCode == 200 || res.StatusCode == 201 {
+		return nil
+	} else {
+		return fmt.Errorf("Something went wrong:")
+	}
+}

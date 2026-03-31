@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+//State: Incomplete
+
 type GetUserResponse struct {
 	Data User `json:"data"`
 }
