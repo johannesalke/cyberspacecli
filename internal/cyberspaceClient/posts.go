@@ -88,7 +88,7 @@ func (c *APIClient) GetPostById(post_id string) (Post, error) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print(postConfirm)
+	//fmt.Print(postConfirm)
 	return postConfirm.Data, nil
 }
 

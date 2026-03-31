@@ -51,38 +51,14 @@ func main() {
 	csc.Tokens = client.Login(csc.ApiUrl)
 	fmt.Printf("authToken: %.10s |\n", csc.Tokens.IDToken)
 
-	/*id := "nxSSfugK6L9tFBSF1zEZ"
-
-	fmt.Print(id)
-	os.Exit(0)*/
-
-	//client.Post{}
 	c := commands{make(map[string]func(*client.APIClient, command) error)}
 	c.register("feed", handlerViewFeed)
 	c.register("write", handlerCreatePost)
-	c.register("replies", handlerViewPost)
+	c.register("post", handlerViewPost)
 	c.register("note", handlerUpdateNote)
+	c.register("notifications", handlerViewNotifications)
 	//c.register("config", handlerUpdateConfig)
-	/*
-		post, err := csc.GetPostById(id)
-		if err != nil {
-			fmt.Print(err)
-		}
-		fmt.Print(post.AuthorUsername, post.Content)
-		err = csc.DeletePost(id)
-		if err != nil {
-			fmt.Print(err)
-		}
-		for true {
-			x := 5
-			x = x + 5
-		}
 
-		err = csc.CreatePost()
-		if err != nil {
-			fmt.Print(err)
-		}
-	*/
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for true {
@@ -164,7 +140,7 @@ func handlerViewPost(csc *client.APIClient, cmd command) error {
 
 	for _, reply := range replies {
 
-		renderReplies(reply)
+		renderReply(reply)
 
 	}
 
@@ -190,6 +166,14 @@ func handlerUpdateConfig(csc *client.APIClient, cmd command) error {
 
 func handlerViewNotifications(csc *client.APIClient, cmd command) error {
 
+	notifications, new_cursor, err := csc.GetNotifications(10, csc.Cursors["notifications"])
+	if err != nil {
+		fmt.Printf("Error getting notifs: %s", err)
+	}
+	csc.Cursors["notifications"] = new_cursor
+	for _, notification := range notifications {
+		renderNotification(csc, notification)
+	}
 	return nil
 }
 
