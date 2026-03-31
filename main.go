@@ -11,7 +11,7 @@ import (
 	"strings"
 	//"time"
 
-	glamour "charm.land/glamour/v2"
+	//glamour "charm.land/glamour/v2"
 
 	client "github.com/johannesalke/CyberspaceClient/internal/cyberspaceClient"
 )
@@ -24,26 +24,32 @@ type Config struct {
 	client   http.Client
 }
 
-var renderer, err = glamour.NewTermRenderer(
-	glamour.WithStylePath("style.json"),
-	glamour.WithWordWrap(80))
-
 //
 
 func main() {
 	fmt.Print(err)
 
-	renderer, _ := glamour.NewTermRenderer(glamour.WithStylePath("dark"))
-	out, _ := renderer.Render("# Heading\n\n**Bold text**\n\n- List item")
-	fmt.Print(out)
+	//renderer, _ := glamour.NewTermRenderer(glamour.WithStylePath("dark"))
+	//out, _ := renderer.Render("# Heading\n\n**Bold text**\n\n- List item")
+	//fmt.Print(out)
 
 	var csc = client.InitAPIClient()
 	//fmt.Print(csc)
+	//csc.Config = client.GetConfig()
+	//fmt.Print(csc.Config)
 
 	//cfg := Config{apiUrl: "https://api.cyberspace.online/v1"}
 	//client := http.NewClientHandler()
+	/*if csc.Config.StayLoggedIn == true {
+		csc.Tokens = client.AuthTokens{RefreshToken: "", IDToken: "", RTDBToken: ""}
+		csc.Tokens.RefreshToken = csc.Config.StoredValues.RefreshToken
+		fmt.Print((csc.Tokens.RefreshToken), "\n")
+		csc.TokenRefresh()
+	} else {
+
+	}*/
 	csc.Tokens = client.Login(csc.ApiUrl)
-	fmt.Printf("authToken: %.10s\n", csc.Tokens.IDToken)
+	fmt.Printf("authToken: %.10s |\n", csc.Tokens.IDToken)
 
 	/*id := "nxSSfugK6L9tFBSF1zEZ"
 
@@ -53,9 +59,10 @@ func main() {
 	//client.Post{}
 	c := commands{make(map[string]func(*client.APIClient, command) error)}
 	c.register("feed", handlerViewFeed)
-	c.register("post", handlerCreatePost)
-
+	c.register("write", handlerCreatePost)
+	c.register("replies", handlerViewPost)
 	c.register("note", handlerUpdateNote)
+	//c.register("config", handlerUpdateConfig)
 	/*
 		post, err := csc.GetPostById(id)
 		if err != nil {
@@ -134,27 +141,37 @@ func handlerViewFeed(csc *client.APIClient, cmd command) error {
 		if post.IsNSFW == true {
 			continue
 		}
-		topline, _ := renderer.Render(fmt.Sprintln("@"+post.AuthorUsername, " | ", post.RepliesCount, " replies | ", post.PostID))
-		//fmt.Println(topline)
-
-		seperator, err := renderer.Render(strings.Repeat("─", 80))
-		if err != nil {
-			fmt.Println(err)
-		}
-		renderedMD, err := renderer.Render(post.Content)
-		if err != nil {
-			fmt.Println(err)
-		}
-		err = RenderPost(topline, seperator, renderedMD)
-		if err != nil {
-			fmt.Println(err)
-		}
-		//feedStyle.Render(topline + strings.Repeat("─", 80) + renderedMD)
-		//fmt.Print("=======================================================", "\n")
+		renderPost(post)
 
 	}
 	return nil
 }
+
+func handlerViewPost(csc *client.APIClient, cmd command) error {
+
+	post_id := cmd.Args[0]
+	post, err := csc.GetPostById(post_id)
+	if err != nil {
+		fmt.Print(err)
+	}
+	renderPost(post)
+	replies, _, err := csc.GetReplies(post_id, 20, "")
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	for _, reply := range replies {
+
+		renderReplies(reply)
+
+	}
+
+	if err != nil {
+		fmt.Print(err)
+	}
+	return nil
+}
+
 func handlerCreatePost(csc *client.APIClient, cmd command) error {
 	err := csc.CreatePost()
 	if err != nil {
@@ -163,12 +180,13 @@ func handlerCreatePost(csc *client.APIClient, cmd command) error {
 	return nil
 }
 
-func handlerViewNotifications(csc *client.APIClient, cmd command) error {
+func handlerUpdateConfig(csc *client.APIClient, cmd command) error {
 
+	csc.UpdateConfig()
 	return nil
 }
 
-func handlerViewPost(csc *client.APIClient, cmd command) error {
+func handlerViewNotifications(csc *client.APIClient, cmd command) error {
 
 	return nil
 }

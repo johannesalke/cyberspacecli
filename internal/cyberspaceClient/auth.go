@@ -34,9 +34,12 @@ type AuthResponse struct {
 func Login(url string) AuthTokens { //client http.Client,
 	var email string
 	var password string
-	fmt.Print("To log into cyberspace, please enter your email:\n")
-	//fmt.Scan(&email)
-	email = "not0really0anonymous@gmail.com"
+	email = os.Getenv("cyberspace_email")
+	if email == "" {
+		fmt.Print("To log into cyberspace, please enter your email:\n")
+		//fmt.Scan(&email)
+		fmt.Scan(&email)
+	}
 	fmt.Print("To sign in, please enter your password:\n")
 	fmt.Scan(&password)
 
@@ -78,11 +81,13 @@ func (c *APIClient) TokenRefresh() {
 		os.Exit(1)
 	}
 	res, err := http.Post(c.ApiUrl+"/auth/refresh", "application/json", bytes.NewBuffer(refreshJson))
-	//defer res.Body.Close()
+
 	if err != nil {
 		fmt.Printf("Error refreshing auth tokens: %s\n", err)
 		os.Exit(1)
 	}
+	defer res.Body.Close()
+
 	var refTokens refreshedTokens
 	decoder := json.NewDecoder(res.Body)
 	err = decoder.Decode(&refTokens)
@@ -92,7 +97,10 @@ func (c *APIClient) TokenRefresh() {
 	}
 	c.Tokens.IDToken = refTokens.IDToken
 	c.Tokens.RTDBToken = refTokens.RTDBToken
-	c.LastStatusCode = 0
+	if c.LastStatusCode == 401 {
+		fmt.Print("Remedial Login.")
+		c.Tokens = Login(c.ApiUrl)
+	}
 
 }
 
