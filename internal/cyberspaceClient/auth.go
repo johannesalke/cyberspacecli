@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-
+	"golang.org/x/term"
 	"net/http"
 	"os"
+	"syscall"
 )
 
 /*Contents: This package contains all functions related to authentication. They fall into 3 categories:
@@ -34,7 +35,7 @@ type AuthResponse struct {
 
 func Login(url string) AuthTokens { //client http.Client,
 	var email string
-	var password string
+	//var password string
 	email = os.Getenv("cyberspace_email")
 	if email == "" {
 		fmt.Print("To log into cyberspace, please enter your email:\n")
@@ -42,9 +43,14 @@ func Login(url string) AuthTokens { //client http.Client,
 		fmt.Scan(&email)
 	}
 	fmt.Print("To sign in, please enter your password:\n")
-	fmt.Scan(&password)
+	//fmt.Scan(&password)
+	password, err := term.ReadPassword(syscall.Stdin)
+	if err != nil {
+		fmt.Println("Error reading password:", err)
+		os.Exit(1)
+	}
 
-	loginJson, err := json.Marshal(loginData{Email: email, Password: password})
+	loginJson, err := json.Marshal(loginData{Email: email, Password: string(password)})
 	if err != nil {
 		fmt.Printf("Error encoding loginData to json: %s", err)
 		os.Exit(1)
