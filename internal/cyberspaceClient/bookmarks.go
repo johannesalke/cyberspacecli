@@ -47,12 +47,27 @@ func (c *APIClient) GetBookmarks(limit int, cursor string) (posts []Bookmark, ne
 }
 
 type CreateBookmarkInput struct {
-	ReplyID string `json:"replyId"`
+	ReplyID string `json:"replyId,omitempty"`
+	PostID  string `json:"postId,omitempty"`
 	Type    string `json:"type"`
 }
 
+type createBookmarkConfirm struct {
+	Data struct {
+		BookmarkID string `json:"bookmarkId"`
+	} `json:"data"`
+}
+
 func (c *APIClient) CreateBookmark(id, bookmarkType string) error {
-	bookmarkInput := CreateBookmarkInput{ReplyID: id, Type: bookmarkType}
+	bookmarkInput := CreateBookmarkInput{Type: bookmarkType}
+	if bookmarkType == "post" {
+		bookmarkInput.PostID = id
+	} else if bookmarkType == "reply" {
+		bookmarkInput.ReplyID = id
+	} else {
+		return fmt.Errorf("Invalid type of bookmarked object. Must be either 'post' or 'reply'")
+	}
+
 	postJson, err := json.Marshal(bookmarkInput)
 	if err != nil {
 		panic(err)
@@ -65,6 +80,16 @@ func (c *APIClient) CreateBookmark(id, bookmarkType string) error {
 	if err != nil {
 		return fmt.Errorf("Error sending post request:%s", err)
 	}
+	/*
+		var bookmarkConfirm createBookmarkConfirm
+		decoder := json.NewDecoder(res.Body)
+		err = decoder.Decode(&bookmarkConfirm)
+		if err != nil {
+			return fmt.Errorf("Error decoding bookmark json:%s", err)
+		}*/
+	//fmt.Print(postConfirm)
+	//fmt.Print(res.Status)
+	//fmt.Print(res.Header)
 	return nil
 
 }

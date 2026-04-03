@@ -53,10 +53,13 @@ Use the optional argument 'new' to load posts made since you started the client 
 - `help`: Prints instructions to the console.
 - `exit`: exit
 
+
+
 ### Limitations
 
 The client doesn't work on Windows, because it uses traits of the Linux terminal to format the output & edit documents. If you run Windows, there are two ways of quickly getting around that: Install [WSL](https://learn.microsoft.com/en-us/windows/wsl/install), an official Linux subsystem for Windows, or use a different client. From conversation with the dev, I know that cyberspace user @Ragnar's TUI client works just fine on windows due to having a different technological foundation. You can find it [here](https://github.com/ArmadilloBrillo/cyber-tui).
 
+The client doesn't properly support pure keyboard navigation, because many to most people will still need to use a mouse/trackpad to scroll up and down the terminal output history to browse e.g. 'view feed' output. Supposedly this can be circumvented with `Fn + ↑ / ↓` on mac and `Shift + PageUp / PageDown` on Windows/Linux, but if at all, that only works on some versions. Personally, I managed to scroll up and down in windows 10 Powershell via `Ctrl + ↑ / ↓`, but the same didn't work in WSL Ubuntu.
 
 ### Note:
 When the program closes, including via ctrl+c, it will reset your terminal color to the default. 

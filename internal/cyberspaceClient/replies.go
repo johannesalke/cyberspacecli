@@ -101,8 +101,8 @@ func (c *APIClient) CreateReply(replyInput CreateReplyInput) (Reply, error) {
 	if err != nil {
 		return Reply{}, fmt.Errorf("Error sending reply request:%s", err)
 	}
-	fmt.Print(res.Status)
-	fmt.Print(res.Header)
+	//fmt.Print(res.Status)
+	//fmt.Print(res.Header)
 
 	var replyConfirm createReplyResponse
 	decoder := json.NewDecoder(res.Body)
@@ -110,7 +110,7 @@ func (c *APIClient) CreateReply(replyInput CreateReplyInput) (Reply, error) {
 	if err != nil {
 		return Reply{}, fmt.Errorf("Error decoding reply json:%s", err)
 	}
-	fmt.Print(replyConfirm)
+	//fmt.Print(replyConfirm)
 
 	reply := Reply{
 		Content: replyInput.Content, PostID: replyInput.PostID, ParentReplyID: replyInput.ParentReplyID,

@@ -19,8 +19,10 @@ import (
 	//"os/exec"
 	"strings"
 	//"time"
+	//"golang.org/x/sys/windows"
 
 	//glamour "charm.land/glamour/v2"
+	osspecific "github.com/johannesalke/cyberspacecli/internal/os_specific"
 
 	client "github.com/johannesalke/cyberspacecli/internal/cyberspaceClient"
 )
@@ -47,6 +49,8 @@ func main() {
 	//out, _ := renderer.Render("# Heading\n\n**Bold text**\n\n- List item")
 	//fmt.Print(out)
 	//color.Set(color.BgHiGreen)
+	osspecific.EnableANSI()
+
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -101,6 +105,7 @@ func main() {
 	c.register("write", handlerWrite)
 	c.register("edit", handlerEdit)
 	c.register("publish", handlerPublish)
+	c.register("bookmark", handlerBookmark)
 	c.register("help", handlerHelp)
 	//c.register("config", handlerUpdateConfig)
 
@@ -203,7 +208,7 @@ func handlerWrite(csc *client.APIClient, cmd command) error {
 
 func handlerEdit(csc *client.APIClient, cmd command) error {
 	if len(cmd.Args) == 0 {
-		renderPrint("The 'edit' command requires an argument. Valid arguments: note <note_id>, config\n")
+		renderPrint("The 'edit' command requires an argument. Valid arguments: note <note_id>, config.\n")
 		return nil
 	}
 
@@ -216,6 +221,32 @@ func handlerEdit(csc *client.APIClient, cmd command) error {
 		return fmt.Errorf("Unknown argument. Valid arguments for write: post, note.\n")
 
 	}
+
+}
+
+func handlerBookmark(csc *client.APIClient, cmd command) error {
+	if len(cmd.Args) == 0 {
+		renderPrint("The 'bookmark' command requires an argument: The id of the target.\n")
+		return nil
+	}
+
+	targetSimpleID := cmd.Args[0]
+	targetFullID, err := getFullID(targetSimpleID)
+	fmt.Print(targetFullID)
+	if err != nil {
+		fmt.Print(err)
+	}
+	targetType := "post"
+	if _, ok := csc.PostCache[targetFullID]; !ok {
+		targetType = "reply"
+
+	}
+	err = csc.CreateBookmark(targetFullID, targetType)
+	if err != nil {
+		return fmt.Errorf("Failed to create bookmark: %s", err)
+	}
+	fmt.Print("Bookmark successfully created")
+	return nil
 
 }
 
@@ -404,7 +435,7 @@ func handlerWriteReply(csc *client.APIClient, cmd command) error {
 
 	targetSimpleID := cmd.Args[1]
 	targetFullID, err := getFullID(targetSimpleID)
-	fmt.Print(targetFullID)
+	//fmt.Print(targetFullID)
 	if err != nil {
 		fmt.Print(err)
 	}
@@ -412,11 +443,11 @@ func handlerWriteReply(csc *client.APIClient, cmd command) error {
 	if _, ok := csc.PostCache[targetFullID]; !ok {
 		replyInput.ParentReplyID = targetFullID
 		replyInput.PostID = csc.ReplyCache[targetFullID].PostID
-		fmt.Printf("PostID: %s", replyInput.PostID)
+		//fmt.Printf("PostID: %s", replyInput.PostID)
 
 	} else {
 		replyInput.PostID = targetFullID
-		fmt.Printf("PostID: %s", replyInput.PostID)
+		//fmt.Printf("PostID: %s", replyInput.PostID)
 	}
 
 	reply, err := csc.CreateReply(replyInput)
