@@ -11,9 +11,8 @@
 
 This is a Commandline Client for the social network platform [Cyberspace](https://cyberspace.online/). It is currently in an alpha state.
 
-At present, this client has solid basic functions and presentation, but is definitely not yet finished.
-You can check your feed and notifications, make posts as well as write, edit and publish notes.
-You can not yet reply to people, check their profiles, or search for specific topics. 
+At present, this client has solid basic functions and presentation, but lacks the full functionality of the website version.
+You can check your feed and notifications, write posts and replies as well as write, edit and publish notes. 
 
 
 ### Getting Started
@@ -64,7 +63,6 @@ The client doesn't work on Windows, because it uses traits of the Linux terminal
 
 The client doesn't properly support pure keyboard navigation, because many to most people will still need to use a mouse/trackpad to scroll up and down the terminal output history to browse e.g. 'view feed' output. Supposedly this can be circumvented with `Fn + ↑ / ↓` on mac and `Shift + PageUp / PageDown` on Windows/Linux, but if at all, that only works on some versions. Personally, I managed to scroll up and down in windows 10 Powershell via `Ctrl + ↑ / ↓`, but the same didn't work in WSL Ubuntu.
 
-### Note:
-When the program closes, including via ctrl+c, it will reset your terminal color to the default. 
+
 
 
