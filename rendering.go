@@ -209,3 +209,7 @@ func renderText(str string) string {
 func renderPrint(str string) {
 	fmt.Print(renderer.Render(str))
 }
+
+func renderBookmark(bookmark client.Bookmark) {
+
+}

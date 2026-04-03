@@ -15,3 +15,14 @@ type AudioAttachment struct {
 	Title  string `json:"title"`
 	Genre  string `json:"genre"`
 }
+
+type Attachment struct {
+	Type   string `json:"type"`
+	Src    string `json:"src"`
+	Width  int    `json:"width,omitempty"`
+	Height int    `json:"height,omitempty"`
+	Origin string `json:"origin,omitempty"`
+	Artist string `json:"artist,omitempty"`
+	Title  string `json:"title,omitempty"`
+	Genre  string `json:"genre,omitempty"`
+}

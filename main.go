@@ -22,7 +22,6 @@ import (
 	//"golang.org/x/sys/windows"
 
 	//glamour "charm.land/glamour/v2"
-	osspecific "github.com/johannesalke/cyberspacecli/internal/os_specific"
 
 	client "github.com/johannesalke/cyberspacecli/internal/cyberspaceClient"
 )
@@ -38,9 +37,8 @@ type Config struct {
 var IDmap = make(map[int]string)
 var reverseIDmap = make(map[string]int)
 
-//
-
 func main() {
+
 	//fmt.Print(err)
 	IDmap[0] = "existence"
 	reverseIDmap["nonexistence"] = 0
@@ -49,7 +47,7 @@ func main() {
 	//out, _ := renderer.Render("# Heading\n\n**Bold text**\n\n- List item")
 	//fmt.Print(out)
 	//color.Set(color.BgHiGreen)
-	osspecific.EnableANSI()
+	//EnableANSI()
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
@@ -177,6 +175,8 @@ func handlerView(csc *client.APIClient, cmd command) error { // Redirects to han
 		return handlerViewPost(csc, cmd)
 	case "notes":
 		return handlerViewNotes(csc, cmd)
+	case "bookmarks":
+		return handlerViewBookmarks(csc, cmd)
 	default:
 		return fmt.Errorf("Unknown argument. Valid arguments for view: feed, post <id>, notifications, notes.\n")
 	}
@@ -404,11 +404,31 @@ func handlerViewNotes(csc *client.APIClient, cmd command) error {
 } // Complete ~
 
 func handlerViewBookmarks(csc *client.APIClient, cmd command) error {
+	bookmarks, _, err := csc.GetBookmarks(10, csc.Cursors["bookmarks"]) //Normal feed viewing.
+	if err != nil {
+		return err
+	}
 
+	for _, bookmark := range bookmarks {
+		//bookmarkId, _ := getSimpleID(bookmark.BookmarkID)
+		if bookmark.Type == "post" {
+			if post, ok := csc.PostCache[bookmark.PostID]; ok {
+				renderPost(post, true)
+			} else {
+				post, err := csc.GetPostById(bookmark.PostID)
+				if err != nil {
+					fmt.Print("Error while trying to retrieve bookmark post by id: ", err)
+				}
+				renderPost(post, true)
+			}
+		}
+	}
 	return nil
-} // Empty
+
+} // Limited function due to inability to target specific replies for retrieval.
 
 func handlerViewProfile(csc *client.APIClient, cmd command) error {
+
 	return nil
 } // Empty
 

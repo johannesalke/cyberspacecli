@@ -41,7 +41,7 @@ func (c *APIClient) GetBookmarks(limit int, cursor string) (posts []Bookmark, ne
 		panic(err)
 	}
 	//fmt.Print(getNotificationsReply)
-	c.Cursors["bookmarks_standard"] = getBooksmarksResponse.Cursor
+	c.Cursors["bookmarks"] = getBooksmarksResponse.Cursor
 	return getBooksmarksResponse.Data, getBooksmarksResponse.Cursor, nil
 
 }
