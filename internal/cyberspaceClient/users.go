@@ -15,7 +15,7 @@ type GetUserResponse struct {
 type User struct {
 	UserID            string    `json:"userId"`
 	Username          string    `json:"username"`
-	IsBanned          bool      `json:"isBanned"`
+	IsBanned          bool      `json:"isBanned,omitempty"`
 	CreatedAt         time.Time `json:"createdAt"`
 	IsSupporter       bool      `json:"isSupporter"`
 	PermissionImage   bool      `json:"permissionImage"`
@@ -23,18 +23,26 @@ type User struct {
 	UpdatedAt         time.Time `json:"updatedAt"`
 	SupporterIcon     string    `json:"supporterIcon"`
 	SerialNumber      int       `json:"serialNumber"`
-	IsWikiEditor      bool      `json:"isWikiEditor"`
+	IsWikiEditor      bool      `json:"isWikiEditor,omitempty"`
 	GuildSlug         string    `json:"guildSlug"`
 	GuildID           string    `json:"guildId"`
 	GuildIcon         string    `json:"guildIcon"`
 	HasPublicPosts    bool      `json:"hasPublicPosts"`
 	PinnedPostID      string    `json:"pinnedPostId"`
-	LastActiveAt      time.Time `json:"lastActiveAt"`
-	FollowingCount    int       `json:"followingCount"`
 	Bio               string    `json:"bio"`
+	FollowingCount    int       `json:"followingCount"`
+	LastActiveAt      time.Time `json:"lastActiveAt"`
 	FollowersCount    int       `json:"followersCount"`
 	PostsCount        int       `json:"postsCount"`
 	PublicPostsCount  int       `json:"publicPostsCount"`
+	IsHacker          bool      `json:"isHacker,omitempty"`
+	IsImmortal        bool      `json:"isImmortal,omitempty"`
+	LocationLatitude  float64   `json:"locationLatitude,omitempty"`
+	LocationLongitude float64   `json:"locationLongitude,omitempty"`
+	WebsiteName       string    `json:"websiteName,omitempty"`
+	WebsiteURL        string    `json:"websiteUrl,omitempty"`
+	WebsiteImageURL   string    `json:"websiteImageUrl,omitempty"`
+	LocationName      string    `json:"locationName,omitempty"`
 }
 
 func (c *APIClient) GetMyUserProfile() (User, error) {
@@ -54,7 +62,7 @@ func (c *APIClient) GetMyUserProfile() (User, error) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print(userResponse.Data)
+	//fmt.Print(userResponse.Data)
 	return userResponse.Data, nil
 }
 

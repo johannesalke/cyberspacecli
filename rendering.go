@@ -58,8 +58,22 @@ func RenderBox(elements ...string) error {
 
 func renderPost(post client.Post, fullPost bool) { //Full post should be set to false in the feed to truncate posts in the feed. THis is not implemented yet!
 
-	simpleID, _ := simplifyID(post.PostID)
-	topline, _ := renderer.Render(fmt.Sprintln("@"+post.AuthorUsername, " | ", post.RepliesCount, " replies | Id: ", simpleID))
+	simpleID, _ := getSimpleID(post.PostID)
+	replies := ""
+	if post.RepliesCount == 1 {
+		replies = " | 1 reply"
+	} else if post.RepliesCount >= 2 {
+		replies = fmt.Sprintf("| %d replies", post.RepliesCount)
+	}
+	saves := ""
+	if post.BookmarksCount == 1 {
+		saves = " | 1 save"
+	} else if post.BookmarksCount >= 1 {
+		saves = fmt.Sprintf("| %d saves", post.BookmarksCount)
+	}
+	timeSince := humanize.RelTime(time.Now(), post.CreatedAt, "in the future", "ago")
+
+	topline, _ := renderer.Render(fmt.Sprintln("@"+post.AuthorUsername, saves, replies, "|", timeSince, " | Id: ", simpleID))
 
 	seperator, err := renderer.Render(strings.Repeat("─", 80))
 	if err != nil {
@@ -102,12 +116,20 @@ func renderPost(post client.Post, fullPost bool) { //Full post should be set to 
 }
 
 func renderReply(reply client.Reply) {
-	simpleID, _ := simplifyID(reply.ReplyID)
-	responseTarget := reply.ParentPostAuthor
+	simpleID, _ := getSimpleID(reply.ReplyID)
+	responseTarget := "" //reply.ParentPostAuthor
 	if reply.ParentReplyAuthor != "" {
-		responseTarget = reply.ParentReplyAuthor
+		responseTarget = " | Responding to @" + reply.ParentReplyAuthor
 	}
-	topline, _ := renderer.Render(fmt.Sprintln("@"+reply.AuthorUsername, " | ", "Responding to @"+responseTarget, " | Id: ", simpleID))
+	saves := ""
+	if reply.SavesCount == 1 {
+		saves = " | 1 save"
+	} else if reply.SavesCount >= 1 {
+		saves = fmt.Sprintf("| %d saves", reply.SavesCount)
+	}
+	timeSince := humanize.RelTime(time.Now(), reply.CreatedAt, "in the future", "ago")
+
+	topline, _ := renderer.Render(fmt.Sprintln("@"+reply.AuthorUsername, responseTarget, saves, "|", timeSince, " | Id: ", simpleID))
 
 	seperator, err := renderer.Render(strings.Repeat("─", 80))
 	if err != nil {
@@ -135,7 +157,7 @@ type Note struct {
 }
 
 func renderNote(note client.Note, fullNote bool) { //Full note should be set to false in the feed to truncate posts in the feed. THis is not implemented yet!
-	simpleID, _ := simplifyID(note.NoteID)
+	simpleID, _ := getSimpleID(note.NoteID)
 	topline, _ := renderer.Render(fmt.Sprintln("Id: ", simpleID))
 
 	seperator, err := renderer.Render(strings.Repeat("─", 80))
@@ -167,7 +189,7 @@ func renderNote(note client.Note, fullNote bool) { //Full note should be set to 
 }
 
 func renderNotification(csc *client.APIClient, n client.Notification) {
-	simpleID, _ := simplifyID(n.TargetID)
+	simpleID, _ := getSimpleID(n.TargetID)
 	//timeSince :=time.Since(n.CreatedAt)
 	timeSince := humanize.RelTime(time.Now(), n.CreatedAt, "in the future", "ago")
 	var id = ""

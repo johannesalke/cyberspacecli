@@ -19,6 +19,7 @@ type APIClient struct {
 	UserID            string
 	Username          string
 	PostCache         map[string]Post         // key:PostID
+	ReplyCache        map[string]Reply        // key: ReplyID
 	NotificationCache map[string]Notification // key:PostID
 	NoteCache         map[string]Note
 	Cursors           map[string]string // key: whatever you want
@@ -34,6 +35,8 @@ func InitAPIClient() APIClient {
 		Client:            &http.Client{},
 		PostCache:         make(map[string]Post),
 		NotificationCache: make(map[string]Notification),
+		ReplyCache:        make(map[string]Reply),
+		NoteCache:         make(map[string]Note),
 		Cursors:           make(map[string]string),
 	}
 }

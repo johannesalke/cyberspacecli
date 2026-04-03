@@ -7,12 +7,6 @@ import (
 	"time"
 )
 
-type CreateReplyInput struct {
-	PostID        string `json:"postId"`
-	Content       string `json:"content"`
-	ParentReplyID string `json:"parentReplyId"`
-}
-
 type getRepliesResponse struct {
 	Data   []Reply `json:"data"`
 	Cursor string  `json:"cursor"`
@@ -41,6 +35,17 @@ type Reply struct {
 	HasImageAttachment bool `json:"hasImageAttachment,omitempty"`
 }
 
+type CreateReplyInput struct {
+	PostID        string `json:"postId"`
+	Content       string `json:"content"`
+	ParentReplyID string `json:"parentReplyId"`
+}
+type createReplyResponse struct {
+	Data struct {
+		ReplyID string `json:"replyId"`
+	} `json:"data"`
+}
+
 func (c *APIClient) GetReplies(postID string, limit int, cursor string) (replies []Reply, newCursor string, err error) {
 	url := makeGetUrl(c.ApiUrl+"/posts/"+postID+"/replies", limit, cursor)
 
@@ -54,45 +59,65 @@ func (c *APIClient) GetReplies(postID string, limit int, cursor string) (replies
 		return nil, cursor, fmt.Errorf("Error retrieving Posts: %s", err)
 	}
 
-	var getPostsResponse getRepliesResponse
+	var getRepliesResponse getRepliesResponse
 	decoder := json.NewDecoder(res.Body)
-	err = decoder.Decode(&getPostsResponse)
+	err = decoder.Decode(&getRepliesResponse)
 	if err != nil {
 		panic(err)
 	}
 	//fmt.Print(getNotificationsReply)
 	cursor_key := "replies_" + postID
-	c.Cursors[cursor_key] = getPostsResponse.Cursor
+	c.Cursors[cursor_key] = getRepliesResponse.Cursor
+	for _, reply := range getRepliesResponse.Data {
+		c.ReplyCache[reply.ReplyID] = reply
+	}
 
-	return getPostsResponse.Data, getPostsResponse.Cursor, nil
+	return getRepliesResponse.Data, getRepliesResponse.Cursor, nil
 
 }
 
-func (c *APIClient) CreateReply(tokens AuthTokens, replyInput CreateReplyInput) error {
+func (c *APIClient) CreateReply(replyInput CreateReplyInput) (Reply, error) {
 
-	//content := WritePost()
+	writeInCLI := replyInput.Content == "" //Check if the contents of the post have been handed in via argument. If not, use terminal text editor to write post.
+	if writeInCLI {
+		replyInput.Content = WriteContent() //See: utilities
+
+	}
+	if writeInCLI {
+		if ConfirmPostIntention() == false {
+			return Reply{}, nil
+		}
+	}
 
 	replyJson, err := json.Marshal(replyInput)
 	if err != nil {
 		panic(err)
 	}
-	req, err := makeRequest("POST", c.ApiUrl+"/replies", tokens, bytes.NewBuffer(replyJson))
+	req, err := makeRequest("POST", c.ApiUrl+"/replies", c.Tokens, bytes.NewBuffer(replyJson))
 	if err != nil {
-		return fmt.Errorf("Error making reply request:%s", err)
+		return Reply{}, fmt.Errorf("Error making reply request:%s", err)
 	}
 	res, err := c.sendRequest(req)
 	if err != nil {
-		return fmt.Errorf("Error sending reply request:%s", err)
+		return Reply{}, fmt.Errorf("Error sending reply request:%s", err)
+	}
+	fmt.Print(res.Status)
+	fmt.Print(res.Header)
+
+	var replyConfirm createReplyResponse
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&replyConfirm)
+	if err != nil {
+		return Reply{}, fmt.Errorf("Error decoding reply json:%s", err)
+	}
+	fmt.Print(replyConfirm)
+
+	reply := Reply{
+		Content: replyInput.Content, PostID: replyInput.PostID, ParentReplyID: replyInput.ParentReplyID,
+		CreatedAt: time.Now(), AuthorUsername: c.Username,
 	}
 
-	var postConfirm OnePostResponse
-	decoder := json.NewDecoder(res.Body)
-	err = decoder.Decode(&postConfirm)
-	if err != nil {
-		return fmt.Errorf("Error decoding reply json:%s", err)
-	}
-	fmt.Print(postConfirm)
-	return nil
+	return reply, nil
 }
 
 func (c *APIClient) DeleteReply(replyID string) error {

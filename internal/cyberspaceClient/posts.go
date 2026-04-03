@@ -71,6 +71,10 @@ func (c *APIClient) GetPosts(limit int, cursor string) (posts []Post, newCursor 
 	if err != nil {
 		panic(err)
 	}
+	for _, post := range getPostsResponse.Data {
+		c.PostCache[post.PostID] = post
+	}
+
 	//fmt.Print(getNotificationsReply)
 	c.Cursors["feed"] = getPostsResponse.Cursor
 	return getPostsResponse.Data, getPostsResponse.Cursor, nil
@@ -94,12 +98,13 @@ func (c *APIClient) GetPostById(post_id string) (Post, error) {
 	if err != nil {
 		panic(err)
 	}
+	c.PostCache[postConfirm.Data.PostID] = postConfirm.Data
 	//fmt.Print(postConfirm)
 	return postConfirm.Data, nil
 }
 
 func (c *APIClient) CreatePost(postInput CreatePostInput) (Post, error) {
-	writeInCLI := postInput.Content == ""
+	writeInCLI := postInput.Content == "" //Check if the contents of the post have been handed in via argument. If not, use terminal text editor to write post.
 	if writeInCLI {
 		content := WriteContent()         //See: utilities
 		topics := WriteTopics([]string{}) //See: utilities
@@ -138,8 +143,9 @@ func (c *APIClient) CreatePost(postInput CreatePostInput) (Post, error) {
 	//fmt.Print(postConfirm)
 	postMade := Post{ //The response is just a post ID, so it's necessary to manually create the Post object for rendering on the client side. The alternative is to request the post from the server, but for optimization reasons (and becasue that is not possible for replies) I'm doing it the direct way.
 		Content: postInput.Content, Topics: postInput.Topics, PostID: postConfirm.Data.PostID,
-		IsPublic: postInput.IsPublic, IsNSFW: postInput.IsNSFW,
+		IsPublic: postInput.IsPublic, IsNSFW: postInput.IsNSFW, AuthorUsername: c.Username,
 	}
+	c.PostCache[postMade.PostID] = postMade
 	return postMade, nil
 }
 

@@ -69,6 +69,7 @@ func main() {
 	fmt.Print("\033[38;5;172m")
 
 	var csc = client.InitAPIClient()
+
 	//fmt.Print(csc)
 	csc.Config = client.GetConfig()
 	//fmt.Print(csc.Config)
@@ -85,7 +86,14 @@ func main() {
 	} else {
 		csc.Tokens = client.Login(csc.ApiUrl)
 	}
+	user, err := csc.GetMyUserProfile()
+	if err != nil {
+		fmt.Print(err)
+	}
+	csc.Username = user.Username
 
+	fmt.Print("You are now con-nec-ted\n")
+	fmt.Printf("Welcome to Cyberspace, @%s\n", csc.Username)
 	fmt.Printf("[authToken: %.10s...]\n", csc.Tokens.IDToken)
 
 	c := commands{make(map[string]func(*client.APIClient, command) error)}
@@ -93,6 +101,7 @@ func main() {
 	c.register("write", handlerWrite)
 	c.register("edit", handlerEdit)
 	c.register("publish", handlerPublish)
+	c.register("help", handlerHelp)
 	//c.register("config", handlerUpdateConfig)
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -180,6 +189,11 @@ func handlerWrite(csc *client.APIClient, cmd command) error {
 		return handlerWritePost(csc, cmd)
 	case "note":
 		return handlerWriteNote(csc, cmd)
+	case "reply":
+		return handlerWriteReply(csc, cmd)
+	case "response":
+		return handlerWriteReply(csc, cmd) //Because i mixed those up more than once.
+
 	default:
 		return fmt.Errorf("Unknown argument. Valid arguments for write: post, note.\n")
 
@@ -203,6 +217,30 @@ func handlerEdit(csc *client.APIClient, cmd command) error {
 
 	}
 
+}
+
+func handlerHelp(csc *client.APIClient, cmd command) error {
+	fmt.Print(`
+
+CyberspaceCLI supports the following commands: 
+
+- view feed (optional_arg): Load 10 posts from the feed, starting at the newest. Every time the command is used, 10 more are loaded starting from where the previous iteration stopped. In the feed, posts are truncated at 1000 characters. To see the whole post, use the 'view post' command. 
+  - Use the optional argument 'new' to load posts made since you started the client without losing the marker of the basic command. 
+  - Use 'reset' to start over entirely. 
+- view post <post_id>: This command shows the post specified by the id argument, plus the first 20 comments.
+- view notifications (optional_arg): Load 10 notifications. If the notification is for a post or reply, you can use the shown id to open that post. 
+  - Supports the same optional arguments as 'view feed'
+- view notes: Loads 10 notes from your journal.
+- write post: Opens your default text editor (or if you have non, nano (use ctrl+s, ctrl+x to exit)) and lets you write a post. Be aware that it might fail to post, so don't invest too much effort into it without copying the contents elsewhere before saving and closing the editor. After closing the editor, you'll have a chance to choose topics for the post.
+- write note: Same as 'write post', but your writing is put in your journal instead.
+- edit note <note_id: Opens a note in your default text editor (if none, nano) and lets you edit it.
+- post <note_id>: Posts a note to the feed, making it visible to other users. 
+- edit config: This lets you edit the client's config file. If you set 'stay logged in' to true, the client will save your refresh token and you will remain logged in across sessions. The config file should be in your .config/ or Library/Application Support/ directories, depending on whether you use linux or apple.
+- help: you are >here<
+- exit: exit	
+	
+`, "\n")
+	return nil
 }
 
 func handlerPublish(csc *client.APIClient, cmd command) error {
@@ -237,7 +275,7 @@ func handlerViewFeed(csc *client.APIClient, cmd command) error {
 					continue
 				}
 				renderPost(post, false)
-				_, old_posts = simplifyID(post.PostID) //Checks if this iteration crossed into new posts.
+				_, old_posts = getSimpleID(post.PostID) //Checks if this iteration crossed into new posts.
 			}
 		}
 		csc.Cursors["feed"] = cursor_temp
@@ -339,6 +377,10 @@ func handlerViewBookmarks(csc *client.APIClient, cmd command) error {
 	return nil
 } // Empty
 
+func handlerViewProfile(csc *client.APIClient, cmd command) error {
+	return nil
+} // Empty
+
 ///////////////| Writing Handlers |////////////////////////
 
 func handlerWritePost(csc *client.APIClient, cmd command) error {
@@ -352,6 +394,42 @@ func handlerWritePost(csc *client.APIClient, cmd command) error {
 	renderPost(post, true)
 	return nil
 } //|Complete
+
+func handlerWriteReply(csc *client.APIClient, cmd command) error {
+	if len(cmd.Args) != 2 {
+		renderPrint("The 'write reply' command requires the id of a target as an argument\n")
+	}
+
+	replyInput := client.CreateReplyInput{}
+
+	targetSimpleID := cmd.Args[1]
+	targetFullID, err := getFullID(targetSimpleID)
+	fmt.Print(targetFullID)
+	if err != nil {
+		fmt.Print(err)
+	}
+	//targetIsPost := false
+	if _, ok := csc.PostCache[targetFullID]; !ok {
+		replyInput.ParentReplyID = targetFullID
+		replyInput.PostID = csc.ReplyCache[targetFullID].PostID
+		fmt.Printf("PostID: %s", replyInput.PostID)
+
+	} else {
+		replyInput.PostID = targetFullID
+		fmt.Printf("PostID: %s", replyInput.PostID)
+	}
+
+	reply, err := csc.CreateReply(replyInput)
+	if err != nil {
+		fmt.Print(err)
+	}
+	if reply.Content == "" { //If the user either wrote nothing in the document, or didn't confirm intention to post.
+		return nil
+	}
+	renderReply(reply)
+	return nil
+
+}
 
 func handlerWriteNote(csc *client.APIClient, cmd command) error {
 	note, err := csc.CreateNote(client.CreateNoteInput{})
@@ -426,7 +504,7 @@ func handlerPublishNote(csc *client.APIClient, cmd command) error {
 //var IDmap = make(map[int]string)
 //var reverseIDmap = make(map[string]int)
 
-func simplifyID(fullID string) (simpleID int, exists bool) {
+func getSimpleID(fullID string) (simpleID int, exists bool) {
 	currentValue := reverseIDmap[fullID] //Check if post already exists in database
 	if currentValue != 0 {
 		//fmt.Print("Id already exists, fam.")
