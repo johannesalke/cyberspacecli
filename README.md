@@ -16,6 +16,10 @@ You can check your feed and notifications, write posts and replies as well as wr
 
 Please note: You need to have API access permissions enabled on your account to use this client. Just DM/C-Mail @genghis_khan. The limitation is to protect the server from uncought security flaws or potential for excessive requests.
 
+
+![Graphical Showcase](https://i.postimg.cc/kgwgddBQ/github-showcase-1.png)
+
+
 ### Getting Started
 
 This assumes you already have a Go itself installed. If you do not, refer to this page [this page](https://golang.org/doc/install) before returning. 
