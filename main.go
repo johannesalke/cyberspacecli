@@ -81,7 +81,7 @@ func main() {
 
 	//cfg := Config{apiUrl: "https://api.cyberspace.online/v1"}
 	//client := http.NewClientHandler()
-	if csc.Config.StayLoggedIn == true {
+	if csc.Config.StayLoggedIn == true && csc.Config.StoredValues.RefreshToken != "" {
 		csc.Tokens = client.AuthTokens{RefreshToken: "", IDToken: "", RTDBToken: ""}
 		csc.Tokens.RefreshToken = csc.Config.StoredValues.RefreshToken
 		//fmt.Print((csc.Tokens.RefreshToken), "\n")

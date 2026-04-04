@@ -99,7 +99,7 @@ func (c *APIClient) TokenRefresh() {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		fmt.Printf("Unexpected status during token refresh: %d\n", res.StatusCode)
+		fmt.Printf("Unexpected status during token refresh: %s\n", res.Status)
 		os.Exit(1)
 	}
 
