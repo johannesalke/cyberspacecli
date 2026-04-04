@@ -52,6 +52,13 @@ type ConfigStorage struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+type ErrorResponse struct {
+	Error struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	} `json:"error"`
+}
+
 //Missing: Follows,
 
 //Incomplete: Users(Profile update)

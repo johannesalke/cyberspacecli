@@ -100,6 +100,13 @@ func (c *APIClient) TokenRefresh() {
 
 	if res.StatusCode != http.StatusOK {
 		fmt.Printf("Unexpected status during token refresh: %s\n", res.Status)
+		var errorResponse ErrorResponse
+		decoder := json.NewDecoder(res.Body)
+		err = decoder.Decode(&errorResponse)
+		if err != nil {
+			fmt.Print(err)
+		}
+		fmt.Print(errorResponse)
 		os.Exit(1)
 	}
 
