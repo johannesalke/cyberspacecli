@@ -14,6 +14,7 @@ This is a Commandline Client for the social network platform [Cyberspace](https:
 At present, this client has solid basic functions and presentation, but lacks the full functionality of the website version.
 You can check your feed and notifications, write posts and replies as well as write, edit and publish notes. 
 
+Please note: You need to have API access permissions enabled on your account to use this client. Just DM/C-Mail @genghis_khan. The limitation is to protect the server from uncought security flaws or potential for excessive requests.
 
 ### Getting Started
 

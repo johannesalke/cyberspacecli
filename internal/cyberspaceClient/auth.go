@@ -61,6 +61,19 @@ func Login(url string) AuthTokens { //client http.Client,
 		fmt.Printf("Error logging in: %s\n", err)
 		os.Exit(1)
 	}
+
+	if res.StatusCode != http.StatusOK {
+		fmt.Printf("Unexpected status during token refresh: %s\n", res.Status)
+		var errorResponse ErrorResponse
+		decoder := json.NewDecoder(res.Body)
+		err = decoder.Decode(&errorResponse)
+		if err != nil {
+			fmt.Print(err)
+		}
+		fmt.Print(errorResponse)
+		os.Exit(1)
+	}
+
 	var authResp AuthResponse
 	decoder := json.NewDecoder(res.Body)
 	err = decoder.Decode(&authResp)
