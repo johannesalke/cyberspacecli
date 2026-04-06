@@ -161,13 +161,13 @@ func (c *APIClient) DeletePost(postId string) error {
 	}
 
 	if res.StatusCode == 200 { //Check result based on response code.
-		fmt.Printf("The post was successfully deleted.\n")
+		//fmt.Printf("The post was successfully deleted.\n")
 	} else if res.StatusCode == 404 {
-		fmt.Printf("No post with that id found.\n")
+		return fmt.Errorf("No post with that id found.\n")
 	} else if res.StatusCode == 403 {
-		fmt.Printf("You do not have authority to delete this post.\n")
+		return fmt.Errorf("You do not have authority to delete this post.\n")
 	} else {
-		fmt.Printf("Something went wrong.\n")
+		return fmt.Errorf("Something went wrong.\n")
 	}
 	return nil
 }

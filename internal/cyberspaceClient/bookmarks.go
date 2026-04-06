@@ -40,6 +40,10 @@ func (c *APIClient) GetBookmarks(limit int, cursor string) (posts []Bookmark, ne
 	if err != nil {
 		panic(err)
 	}
+	for _, bookmark := range getBooksmarksResponse.Data {
+		c.BookmarkCache[bookmark.BookmarkID] = bookmark
+	}
+
 	//fmt.Print(getNotificationsReply)
 	c.Cursors["bookmarks"] = getBooksmarksResponse.Cursor
 	return getBooksmarksResponse.Data, getBooksmarksResponse.Cursor, nil
@@ -104,6 +108,6 @@ func (c *APIClient) DeleteBookmark(bookmarkId string) error {
 	if err != nil {
 		return fmt.Errorf("Error during the request process: %s", err)
 	}
-	fmt.Print("Successfully deleted bookmark")
+	//fmt.Print("Successfully deleted bookmark")
 	return nil
 }

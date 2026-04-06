@@ -115,6 +115,7 @@ func main() {
 	c.register("publish", handlerPublish)
 	c.register("bookmark", handlerBookmark)
 	c.register("help", handlerHelp)
+	c.register("delete", handlerDelete)
 	//c.register("config", handlerUpdateConfig)
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -248,7 +249,7 @@ func handlerBookmark(csc *client.APIClient, cmd command) error {
 
 	targetSimpleID := cmd.Args[0]
 	targetFullID, err := getFullID(targetSimpleID)
-	fmt.Print(targetFullID)
+	//fmt.Print(targetFullID)
 	if err != nil {
 		fmt.Print(err)
 	}
@@ -261,7 +262,7 @@ func handlerBookmark(csc *client.APIClient, cmd command) error {
 	if err != nil {
 		return fmt.Errorf("Failed to create bookmark: %s", err)
 	}
-	fmt.Print("Bookmark successfully created")
+	fmt.Print("Bookmark successfully created\n")
 	return nil
 
 }
@@ -271,26 +272,26 @@ func handlerHelp(csc *client.APIClient, cmd command) error {
 
  CyberspaceCLI supports the following commands: 
 
-- view feed (optional_arg): Load 10 posts from the feed, starting at the newest. Every time the command is used, 10 more are loaded starting from where the previous iteration stopped. In the feed, posts are truncated at 1000 characters. To see the whole post, use the 'view post' command. 
-  - Use the optional argument 'new' to load posts made since you started the client without losing the marker of the basic command. 
-  - Use 'reset' to start over entirely. 
-- view post <post_id>: This command shows the post specified by the id argument, plus the first 20 comments.
-- view notifications (optional_arg): Load 10 notifications. If the notification is for a post or reply, you can use the shown id to open that post. 
-  - Supports the same optional arguments as 'view feed'
-- view notes: Loads 10 notes from your journal.
-- view bookmarks: Load 10 bookmarks. Due to current API limitations, only bookmarked posts can be displayed, but not bookmarked replies. 
-- view profile <username>: Displays a simplified version of that users profile, as well as their pinned post if they have one. Use 'me' as the username to see your own profile.
-- write post: Opens your default text editor (or if you have non, nano (use ctrl+s, ctrl+x to exit)) and lets you write a post. Be aware that it might fail to post, so don't invest too much effort into it without copying the contents elsewhere before saving and closing the editor. After closing the editor, you'll have a chance to choose topics for the post.
-- write reply <target_id>: Write a reply to the post or reply whose id you gave. Will ask for final confirmation before posting. 
-- write note: Same as 'write post', but your writing is put in your journal instead.
-- edit note <note_id: Opens a note in your default text editor (if none, nano) and lets you edit it.
-- post <note_id>: Posts a note to the feed, making it visible to other users. 
-- edit config: This lets you edit the client's config file. If you set 'stay logged in' to true, the client will save your refresh token and you will remain logged in across sessions. The config file should be in your .config/ or Library/Application Support/ directories, depending on whether you use linux or apple.
-- bookmark <target_id: Bookmarks the post or reply whose id was given as an argument.
-- help: you are >here<
-- exit: exit	
+ - view feed (optional_arg): Load 10 posts from the feed, starting at the newest. Every time the command is used, 10 more are loaded starting from where the previous iteration stopped. In the feed, posts are truncated at 1000 characters. To see the whole post, use the 'view post' command. 
+   - Use the optional argument 'new' to load posts made since you started the client without losing the marker of the basic command. 
+   - Use 'reset' to start over entirely. 
+ - view post <post_id>: This command shows the post specified by the id argument, plus the first 20 comments.
+ - view notifications (optional_arg): Load 10 notifications. If the notification is for a post or reply, you can use the shown id to open that post. 
+   - Supports the same optional arguments as 'view feed'
+ - view notes: Loads 10 notes from your journal.
+ - view bookmarks: Load 10 bookmarks. Due to current API limitations, only bookmarked posts can be displayed, but not bookmarked replies. 
+ - view profile <username>: Displays a simplified version of that users profile, as well as their pinned post if they have one. Use 'me' as the username to see your own profile.
+ - write post: Opens your default text editor (or if you have non, nano (use ctrl+s, ctrl+x to exit)) and lets you write a post. Be aware that it might fail to post, so don't invest too much effort into it without copying the contents elsewhere before saving and closing the editor. After closing the editor, you'll have a chance to choose topics for the post.
+ - write reply <target_id>: Write a reply to the post or reply whose id you gave. Will ask for final confirmation before posting. 
+ - write note: Same as 'write post', but your writing is put in your journal instead.
+ - edit note <note_id: Opens a note in your default text editor (if none, nano) and lets you edit it.
+ - post <note_id>: Posts a note to the feed, making it visible to other users. 
+ - edit config: This lets you edit the client's config file. If you set 'stay logged in' to true, the client will save your refresh token and you will remain logged in across sessions. The config file should be in your .config/ or Library/Application Support/ directories, depending on whether you use linux or apple.
+ - bookmark <target_id: Bookmarks the post or reply whose id was given as an argument.
+ - help: you are >here<
+ - exit: exit	
 
-`, "\n")
+ `, "\n")
 	return nil
 }
 
@@ -308,6 +309,53 @@ func handlerPublish(csc *client.APIClient, cmd command) error {
 
 	}
 
+}
+
+func handlerDelete(csc *client.APIClient, cmd command) error {
+
+	if len(cmd.Args) != 1 {
+		renderPrint("The delete command requires one argument: The ID of the object to be deleted.\n")
+		return nil
+	}
+	targetID, err := getFullID(cmd.Args[0])
+	if err != nil {
+		return err
+	}
+	fmt.Print("Are you sure you wish to delete this object? This action cannot be undone. Type 'yes' to confirm:\n")
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	if choice := scanner.Text(); choice != "yes" && choice != "y" && choice != "Yes" {
+		fmt.Print("Object has not been deleted\n")
+		return nil
+	}
+
+	if _, ok := csc.PostCache[targetID]; ok {
+		err := csc.DeletePost(targetID)
+		if err != nil {
+			return err
+		}
+		fmt.Print("successfully deleted post\n")
+	} else if _, ok := csc.ReplyCache[targetID]; ok {
+		err := csc.DeleteReply(targetID)
+		if err != nil {
+			return err
+		}
+		fmt.Print("successfully deleted reply\n")
+	} else if _, ok := csc.NoteCache[targetID]; ok {
+		err := csc.DeleteNote(targetID)
+		if err != nil {
+			return err
+		}
+		fmt.Print("successfully deleted note\n")
+	} /*else if _, ok := csc.BookmarkCache[targetID]; ok {
+		err := csc.DeleteBookmark(targetID)
+		if err != nil {
+			return err
+		}
+		fmt.Print("successfully deleted bookmark\n")
+	}*/ //Bookmarks can't be deleted because they are displayed with their respective post/reply ID, to facilitate users view-ing the post+replies if they wish to.
+
+	return nil
 }
 
 //////////////////| View Handlers |///////////////////////////////

@@ -114,8 +114,9 @@ func (c *APIClient) CreateReply(replyInput CreateReplyInput) (Reply, error) {
 
 	reply := Reply{
 		Content: replyInput.Content, PostID: replyInput.PostID, ParentReplyID: replyInput.ParentReplyID,
-		CreatedAt: time.Now(), AuthorUsername: c.Username,
+		CreatedAt: time.Now(), AuthorUsername: c.Username, ReplyID: replyConfirm.Data.ReplyID,
 	}
+	c.ReplyCache[reply.ReplyID] = reply
 
 	return reply, nil
 }
@@ -132,13 +133,13 @@ func (c *APIClient) DeleteReply(replyID string) error {
 	}
 
 	if res.StatusCode == 200 { //Check result based on response code.
-		fmt.Printf("The reply was successfully deleted.\n")
+		//fmt.Printf("The reply was successfully deleted.\n")
 	} else if res.StatusCode == 404 {
-		fmt.Printf("No reply with that id found.\n")
+		return fmt.Errorf("No reply with that id found.\n")
 	} else if res.StatusCode == 403 {
-		fmt.Printf("You do not have authority to delete this reply.\n")
+		return fmt.Errorf("You do not have authority to delete this reply.\n")
 	} else {
-		fmt.Printf("Something went wrong.\n")
+		return fmt.Errorf("Something went wrong.\n")
 	}
 	return nil
 }

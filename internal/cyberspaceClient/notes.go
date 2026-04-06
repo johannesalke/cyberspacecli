@@ -51,6 +51,10 @@ func (c *APIClient) GetNotes(limit int, cursor string) (posts []Note, newCursor 
 		panic(err)
 	}
 	//fmt.Print(getNotificationsReply)
+	for _, note := range getNotesResponse.Data {
+		c.NoteCache[note.NoteID] = note
+	}
+
 	c.Cursors["posts_standard"] = getNotesResponse.Cursor
 	return getNotesResponse.Data, getNotesResponse.Cursor, nil
 
@@ -115,6 +119,7 @@ func (c *APIClient) CreateNote(noteInput CreateNoteInput) (Note, error) {
 		Content: noteInput.Content, Topics: noteInput.Topics, NoteID: noteConfirm.Data.NoteID,
 		//IsPublic: postInput.IsPublic, IsNSFW: postInput.IsNSFW,
 	}
+	c.NoteCache[noteMade.NoteID] = noteMade
 	return noteMade, nil
 }
 
@@ -159,9 +164,9 @@ func (c *APIClient) UpdateNote(noteInput CreateNoteInput, noteID string) (Note, 
 	return noteUpdated, nil
 }
 
-func (c *APIClient) DeleteNote(postId string) error {
+func (c *APIClient) DeleteNote(noteId string) error {
 
-	req, err := makeRequest("DELETE", c.ApiUrl+"/notes/"+postId, c.Tokens, nil)
+	req, err := makeRequest("DELETE", c.ApiUrl+"/notes/"+noteId, c.Tokens, nil)
 	if err != nil {
 		return fmt.Errorf("Error forming delete request: %s", err)
 	}
@@ -172,6 +177,6 @@ func (c *APIClient) DeleteNote(postId string) error {
 	if res.StatusCode == 200 || res.StatusCode == 201 {
 		return nil
 	} else {
-		return fmt.Errorf("Something went wrong:")
+		return fmt.Errorf("Something went wrong: %s", res.Status)
 	}
 }

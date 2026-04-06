@@ -22,6 +22,7 @@ type APIClient struct {
 	ReplyCache        map[string]Reply        // key: ReplyID
 	NotificationCache map[string]Notification // key:PostID
 	NoteCache         map[string]Note
+	BookmarkCache     map[string]Bookmark
 	Cursors           map[string]string // key: whatever you want
 	LastStatusCode    int
 	Config            Config
@@ -37,6 +38,7 @@ func InitAPIClient() APIClient {
 		NotificationCache: make(map[string]Notification),
 		ReplyCache:        make(map[string]Reply),
 		NoteCache:         make(map[string]Note),
+		BookmarkCache:     make(map[string]Bookmark),
 		Cursors:           make(map[string]string),
 	}
 }
