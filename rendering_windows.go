@@ -17,8 +17,7 @@ var (
 	basicBox = lipgloss.NewStyle().
 			Width(86).
 			MarginLeft(4).
-			Padding(0, 2, 0, 2).
-			
+			Padding(0, 2, 0, 2)
 
 	boxTop = lipgloss.NewStyle().Inherit(basicBox).
 		Border(lipgloss.RoundedBorder(), true, true, false, true).
