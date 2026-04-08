@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -55,6 +56,9 @@ func WriteContent() string {
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		editor = "nano" // fallback
+	}
+	if runtime.GOOS == "windows" {
+		editor = "notepad"
 	}
 
 	cmd := exec.Command(editor, tmpFile.Name())

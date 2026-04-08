@@ -350,13 +350,13 @@ func handlerDelete(csc *client.APIClient, cmd command) error {
 			return err
 		}
 		fmt.Print("successfully deleted note\n")
-	} /*else if _, ok := csc.BookmarkCache[targetID]; ok {
+	} else if _, ok := csc.BookmarkCache[targetID]; ok {
 		err := csc.DeleteBookmark(targetID)
 		if err != nil {
 			return err
 		}
 		fmt.Print("successfully deleted bookmark\n")
-	}*/ //Bookmarks can't be deleted because they are displayed with their respective post/reply ID, to facilitate users view-ing the post+replies if they wish to.
+	} //Bookmarks can't be deleted because they are displayed with their respective post/reply ID, to facilitate users view-ing the post+replies if they wish to.
 
 	return nil
 }
