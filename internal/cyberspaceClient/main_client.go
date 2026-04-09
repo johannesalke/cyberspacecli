@@ -174,7 +174,7 @@ func readConfig(cfgPath string) (Config, error) {
 
 func InitConfig(cfgPath string) error {
 	config := Config{
-		StayLoggedIn: false,
+		StayLoggedIn: true,
 		StoredValues: ConfigStorage{
 			Email:        "",
 			RefreshToken: "",
