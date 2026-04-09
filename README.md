@@ -71,12 +71,3 @@ Use the optional argument 'new' to load posts made since you started the client 
 The client doesn't support pure keyboard navigation, as people will still need to use a mouse/trackpad to scroll up and down the terminal output history to browse e.g. 'view feed' output. Supposedly this can be circumvented with `Fn + ↑ / ↓` on mac and `Shift + PageUp / PageDown` on Windows/Linux, but if at all, that only works on some versions. Personally, I managed to scroll up and down in windows 10 Powershell via `Ctrl + ↑ / ↓`, but the same didn't work in WSL Ubuntu.
 
 
-## Contributing
-
-[placeholder]
-
-
-
-
-
-## Motivation
