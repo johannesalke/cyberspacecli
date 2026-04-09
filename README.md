@@ -20,7 +20,7 @@ Please note: You need to have API access permissions enabled on your account to 
 ![Graphical Showcase](https://i.postimg.cc/kgwgddBQ/github-showcase-1.png)
 
 
-## Getting Started
+## Quick Start
 
 This assumes you already have a Go itself installed. If you do not, refer to this page [this page](https://golang.org/doc/install) before returning. 
 
@@ -69,6 +69,13 @@ Use the optional argument 'new' to load posts made since you started the client 
  If you run Windows, I can quickly reccomend two ways of circumventing these limitations: Install [WSL](https://learn.microsoft.com/en-us/windows/wsl/install), an official Linux subsystem for Windows, or use a different client. From conversation with the dev, I know that cyberspace user @Ragnar's TUI client works just fine on windows due to having a different technological foundation. You can find it [here](https://github.com/ArmadilloBrillo/cyber-tui).
 
 The client doesn't support pure keyboard navigation, as people will still need to use a mouse/trackpad to scroll up and down the terminal output history to browse e.g. 'view feed' output. Supposedly this can be circumvented with `Fn + ↑ / ↓` on mac and `Shift + PageUp / PageDown` on Windows/Linux, but if at all, that only works on some versions. Personally, I managed to scroll up and down in windows 10 Powershell via `Ctrl + ↑ / ↓`, but the same didn't work in WSL Ubuntu.
+
+
+## Contributing
+
+[placeholder]
+
+
 
 
 
