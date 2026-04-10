@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -37,6 +38,8 @@ var (
 		MarginLeft(4).
 		Padding(0, 2, 0, 2)
 )
+
+var hyperlinkRe = regexp.MustCompile(`\x1b\]8;[^\x1b]*\x1b\\`)
 
 var renderer, err = glamour.NewTermRenderer(
 	glamour.WithStylePath("style_windows.json"),
@@ -95,6 +98,7 @@ func renderPost(post client.Post, fullPost bool) { //Full post should be set to 
 			fmt.Println(err)
 		}
 	}
+	renderedMD = hyperlinkRe.ReplaceAllString(renderedMD, "")
 
 	if len(post.Topics) != 0 { //This block occurs if a post has topic tags. In that case, another dividing line is added and the topics are displayed below it.
 
@@ -136,6 +140,7 @@ func renderReply(reply client.Reply) {
 		fmt.Println(err)
 	}
 	renderedMD, err := renderer.Render(reply.Content)
+	renderedMD = hyperlinkRe.ReplaceAllString(renderedMD, "")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -168,6 +173,7 @@ func renderNote(note client.Note, fullNote bool) { //Full note should be set to 
 	if err != nil {
 		fmt.Println(err)
 	}
+	renderedMD = hyperlinkRe.ReplaceAllString(renderedMD, "")
 
 	if len(note.Topics) != 0 { //This block occurs if a post has topic tags. In that case, another dividing line is added and the topics are displayed below it.
 
@@ -228,6 +234,7 @@ func renderBookmarkPost(post client.Post, bookmark_id int) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	renderedMD = hyperlinkRe.ReplaceAllString(renderedMD, "")
 
 	if len(post.Topics) != 0 { //This block occurs if a post has topic tags. In that case, another dividing line is added and the topics are displayed below it.
 
@@ -271,6 +278,8 @@ func renderBookmarkReply(reply client.Reply, bookmark_id int) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	renderedMD = hyperlinkRe.ReplaceAllString(renderedMD, "")
+
 	err = RenderBox(topline, seperator, renderedMD)
 	if err != nil {
 		fmt.Println(err)
@@ -311,6 +320,8 @@ func renderProfile(user client.User) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	renderedMD = hyperlinkRe.ReplaceAllString(renderedMD, "")
+
 	if user.WebsiteName != "" {
 
 		bottomline, _ := renderer.Render(fmt.Sprintln(user.WebsiteURL))
