@@ -192,7 +192,7 @@ func renderNote(note client.Note, fullNote bool) { //Full note should be set to 
 
 func renderNotification(csc *client.APIClient, n client.Notification) {
 	simpleID, _ := getSimpleID(n.TargetID)
-	//timeSince :=time.Since(n.CreatedAt)
+
 	timeSince := humanize.RelTime(time.Now(), n.CreatedAt, "in the future", "ago")
 	var id = ""
 	if n.Type == "new_post_friend" || n.Type == "new_post_following" || n.Type == "reply" {
@@ -255,7 +255,7 @@ func renderBookmarkPost(post client.Post, bookmark_id int) {
 }
 
 func renderBookmarkReply(reply client.Reply, bookmark_id int) {
-	responseTarget := "" //reply.ParentPostAuthor
+	responseTarget := ""
 	if reply.ParentReplyAuthor != "" {
 		responseTarget = " | Responding to @" + reply.ParentReplyAuthor
 	}

@@ -2,6 +2,8 @@
 
 package main
 
+//This version of the file is only compiled on windows, and doesn't have any of the ANSI formatting the windows file has.
+
 import (
 	"fmt"
 	"regexp"

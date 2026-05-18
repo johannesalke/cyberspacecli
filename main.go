@@ -11,8 +11,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	//"bytes"
-	//"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -42,15 +40,8 @@ func main() {
 
 	operatingSystem := runtime.GOOS
 
-	//fmt.Print(err)
 	IDmap[0] = "existence"
 	reverseIDmap["nonexistence"] = 0
-
-	//renderer, _ := glamour.NewTermRenderer(glamour.WithStylePath("dark"))
-	//out, _ := renderer.Render("# Heading\n\n**Bold text**\n\n- List item")
-	//fmt.Print(out)
-	//color.Set(color.BgHiGreen)
-	//EnableANSI()
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
@@ -73,7 +64,7 @@ func main() {
 
 	time.Sleep(500 * time.Millisecond)
 	defer fmt.Print("\033[0m")
-	//fmt.Print("\172[0m") fmt.Print("\033[38;5;203m")
+
 	if operatingSystem != "windows" {
 		fmt.Print("\033[38;5;172m")
 	}
@@ -143,8 +134,6 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 		}
-
-		//cmd := args[0]
 
 	}
 
@@ -654,7 +643,7 @@ func handlerEditNote(csc *client.APIClient, cmd command) error {
 		return fmt.Errorf("Error: %s ", err)
 
 	}
-	//fmt.Print(newNoteInput)
+
 	newNote, err := csc.UpdateNote(newNoteInput, fullNoteID)
 	if err != nil {
 		return fmt.Errorf("Error: %s ", err)
@@ -662,7 +651,7 @@ func handlerEditNote(csc *client.APIClient, cmd command) error {
 	}
 
 	renderNote(newNote, true)
-	//fmt.Print(newNote.NoteID, "\n")
+
 	return nil
 } //|Complete
 
@@ -697,11 +686,11 @@ func handlerPublishNote(csc *client.APIClient, cmd command) error {
 func getSimpleID(fullID string) (simpleID int, exists bool) {
 	currentValue := reverseIDmap[fullID] //Check if post already exists in database
 	if currentValue != 0 {
-		//fmt.Print("Id already exists, fam.")
+
 		return currentValue, true
 	}
 
-	//If it does not already exists
+	//If it does not already exists, create it
 	idKeys := maps.Keys(IDmap)
 	var idKeysSlice []int
 	for key := range idKeys {
